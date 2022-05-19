@@ -1,5 +1,6 @@
 package serverjava;
 
+import com.google.gson.Gson;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
@@ -15,67 +16,118 @@ import java.util.List;
 public class Servidor {
 
     private static List<UsuariToken> llistaUsuaris = null;
-    
+
     public static void main(String[] args) {
-        if (args.length < 1) return;
- 
+        if (args.length < 1) {
+            return;
+        }
+
         int port = Integer.parseInt(args[0]);
- 
-        try (ServerSocket serverSocket = new ServerSocket(port)) {
- 
+
+        try ( ServerSocket serverSocket = new ServerSocket(port)) {
+
             System.out.println("Server is listening on port " + port);
-            llistaUsuaris = new ArrayList<UsuariToken> ();
-            
+            llistaUsuaris = new ArrayList<UsuariToken>();
+
             while (true) {
                 Socket socket = serverSocket.accept();
                 System.out.println("New client connected");
-                
-                //llistaUsuaris.add()
- 
+
                 new ServerThread(socket).start();
             }
- 
+
         } catch (IOException ex) {
             System.out.println("Server exception: " + ex.getMessage());
             ex.printStackTrace();
         }
     }
-    
+
     public static class ServerThread extends Thread {
 
-    private Socket socket;
+        private Socket socket;
 
-    public ServerThread(Socket socket) {
-        this.socket = socket;
-    }
+        public ServerThread(Socket socket) {
+            this.socket = socket;
+        }
 
-    public void run() {
-        try {
-            InputStream input = socket.getInputStream();
-            BufferedReader reader = new BufferedReader(new InputStreamReader(input));
+        public void run() {
+            try {
+                //llegir
+                InputStream input = socket.getInputStream();
+                BufferedReader reader = new BufferedReader(new InputStreamReader(input));
 
-            OutputStream output = socket.getOutputStream();
-            PrintWriter writer = new PrintWriter(output, true);
+                //escriure
+                OutputStream output = socket.getOutputStream();
+                PrintWriter writer = new PrintWriter(output, true);
 
-            
-            
-            /*CODI A DESENVOLUPAR ER APP ANDROID*/
-            
-            String text;
+                //la primera vegada haura de ser 1, (login)
+                int peticioClient = Integer.parseInt(reader.readLine());
+                System.out.println("Hem rebut una petició");
 
-            do {
-                text = reader.readLine();
-                String reverseText = new StringBuilder(text).reverse().toString();
-                writer.println("Server: " + reverseText);
+                if (peticioClient == 1) {
+                    Gson gson = new Gson();
+                    String cadenaJson = reader.readLine();
+                    UsuariToken usuari = gson.fromJson(cadenaJson, UsuariToken.class);
+                    System.out.println("Hem rebut un json");
 
-            } while (!text.equals("bye"));
+                    //mirem si el client el tenim registrat a la bd
+                    if (LoginCorrecte()) {
+                        //generem token
+                        usuari.setToken();
+                        //enviem el token
+                        writer.println(usuari.getToken());
+                    } else {
+                        //ha fallat
+                        writer.println("-1");
+                    }
+                } else {
+                    String tokenRebut = reader.readLine();
+                    System.out.println("Token rebut: " + tokenRebut);
+                    if (tokenPermes(tokenRebut)) {
+                        peticioClient = Integer.parseInt(reader.readLine());
+                        switch (peticioClient) {
+                            case 2:
+                                //getProjectes
+                                System.out.println("Vol un 2");
+                                break;
+                            case 3:
+                                //getTasquesAssignades
+                                break;
+                            case 4:
+                                //GetDetallTasca
+                                break;
+                            case 5:
+                                //getNotificacionsPnedents
+                                break;
+                            case 6:
+                                //LlistaUsuaris
+                                break;
+                            case 7:
+                                //NovaEntrada
+                                break;
+                            default:
+                                //fora
+                                break;
+                        }
+                    } else {
+                    }
+                }
 
-            socket.close();
-        } catch (IOException ex) {
-            System.out.println("Server exception: " + ex.getMessage());
-            ex.printStackTrace();
+                /*CODI A DESENVOLUPAR ER APP ANDROID*/
+                socket.close();
+            } catch (IOException ex) {
+                System.out.println("Server exception: " + ex.getMessage());
+                ex.printStackTrace();
+            }
         }
     }
-}
+
+    private static boolean LoginCorrecte() {
+        return true;
+    }
+
+    private static boolean tokenPermes(String token) {
+        return true;
+    }
 
 }
