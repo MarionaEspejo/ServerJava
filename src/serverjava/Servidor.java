@@ -142,16 +142,17 @@ public class Servidor {
                                         List<Tasca> tasques = new ArrayList<>();
 
                                         tasques = cp.getTasquesIDProj(projectes.get(i).getID());
-
-                                        for (int f = 0; f < tasques.size(); f++) {
-                                            projectes.get(i).addTasca(tasques.get(f));
-                                        }
                                         //per cada tasca, afegim les entrades
                                         for (int f = 0; f < tasques.size(); f++) {
                                             List<Entrada> entrades = cp.getEntradaIDTasca(tasques.get(f).getID());
                                             for (int g = 0; g < entrades.size(); g++) {
                                                 tasques.get(f).addEntrada(entrades.get(g));
                                             }
+                                        }
+
+                                        for (int f = 0; f < tasques.size(); f++) {
+                                            projectes.get(i).addTasca(tasques.get(f));
+                                            System.out.println(tasques.get(f).getEntrades().toString());
                                         }
                                     }
 
@@ -187,7 +188,7 @@ public class Servidor {
                             System.out.println("ID tasques: " + idTasca);
                             try {
                                 List<Entrada> entrades = cp.getEntradaIDTasca(idTasca);
-                                System.out.println(entrades.toString());
+                                System.out.println("entrada: " + entrades.toString());
                                 oos.writeObject(entrades);
                             } catch (GestioProjectesException ex) {
                                 Logger.getLogger(Servidor.class.getName()).log(Level.SEVERE, null, ex);
